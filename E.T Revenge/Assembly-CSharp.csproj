@@ -54,6 +54,7 @@
   </ItemGroup>
   <ItemGroup>
      <Compile Include="Assets\Scripts\LevelChange.cs" />
+     <Compile Include="Assets\Scripts\PlayerCollider.cs" />
      <Compile Include="Assets\Scripts\PlayerController.cs" />
  <Reference Include="Unity.TextMeshPro.Editor">
  <HintPath>R:/ETRevenge/ETRevenge/E.T Revenge/Library/ScriptAssemblies/Unity.TextMeshPro.Editor.dll</HintPath>
