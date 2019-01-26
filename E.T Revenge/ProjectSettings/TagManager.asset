@@ -8,6 +8,8 @@ TagManager:
   - DownTrigger
   - LeftTrigger
   - RightTrigger
+  - PitNormal
+  - Sol
   layers:
   - Default
   - TransparentFX
