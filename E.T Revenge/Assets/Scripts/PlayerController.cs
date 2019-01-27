@@ -8,6 +8,7 @@ public class PlayerController : MonoBehaviour
     public bool in_pit;
     public bool end_fall;
 
+
     private Rigidbody2D rb2d;
 
     void Start()
@@ -22,10 +23,12 @@ public class PlayerController : MonoBehaviour
     public GameObject DownTrigger;
     public GameObject LeftTrigger;
     public GameObject RightTrigger;
+    private GameObject Blood;
     private Animator animator;
     public Collider2D PitSave;
     public Vector2 savePos;
     public Vector3 saveCam;
+    public bool kill;
     public bool walk;
     public bool alive;
     public bool scan;
@@ -33,6 +36,7 @@ public class PlayerController : MonoBehaviour
 
     void Awake()
     {
+        Blood = GameObject.Find("Blood");
         Camera = GameObject.FindWithTag("MainCamera");
         UpTrigger = GameObject.FindWithTag("UpTrigger");
         DownTrigger = GameObject.FindWithTag("DownTrigger");
@@ -41,6 +45,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
         alive = true;
         scan = false;
+        kill = false;
         if (Camera == null)
             Debug.Log("Problem");
     }
@@ -104,6 +109,20 @@ public class PlayerController : MonoBehaviour
             rb2d.gravityScale = 0;
             GetComponent<Collider2D>().isTrigger = true;
         }
+        else if (other.gameObject.tag == "Elliot")
+        {
+            Blood.transform.position = other.gameObject.transform.position;
+            Destroy(other.gameObject);
+            kill = true;
+        }
+    }
+
+    IEnumerator CreateBlood()
+    {
+        Blood.SetActive(true);
+        yield return new WaitForSeconds(2);
+        Debug.Log("End for wait");
+        Destroy(Blood);
     }
 
     void OnTriggerExit2D(Collider2D other)
@@ -133,6 +152,11 @@ public class PlayerController : MonoBehaviour
         foreach (SpriteRenderer renderer in renderers)
         {
             renderer.sortingOrder = (int)(renderer.transform.position.y * -100);
+        }
+        if (kill == true)
+        {
+            StartCoroutine(CreateBlood());
+            kill = false;
         }
         if (alive == true)
         {

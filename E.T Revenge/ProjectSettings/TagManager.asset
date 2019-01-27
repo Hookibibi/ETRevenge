@@ -14,6 +14,7 @@ TagManager:
   - PitCurrent
   - Trees
   - Pickup
+  - Elliot
   layers:
   - Default
   - TransparentFX
