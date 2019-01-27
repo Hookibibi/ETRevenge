@@ -15,6 +15,11 @@ TagManager:
   - Trees
   - Pickup
   - Elliot
+  - PitPickup1
+  - PitPickup2
+  - PitPickup3
+  - Water
+  - Cop
   layers:
   - Default
   - TransparentFX

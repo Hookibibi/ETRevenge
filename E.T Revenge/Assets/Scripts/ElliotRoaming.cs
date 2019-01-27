@@ -15,11 +15,26 @@ public class ElliotRoaming : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        transform.position = Vector2.MoveTowards(transform.position,
-            Player.transform.position, speed * Time.deltaTime);
-        if (transform.position.x <= Player.transform.position.x)
-            transform.rotation = Quaternion.Euler(0, 0, 0);
-        else if (transform.position.x > Player.transform.position.x)
-            transform.rotation = Quaternion.Euler(0, 180, 0);
+        if (Player.GetComponent<PlayerController>().alive == true &&
+            Player.GetComponent<PlayerController>().in_pit == false)
+        {
+            transform.position = Vector2.MoveTowards(transform.position,
+                Player.transform.position, speed * Time.deltaTime);
+            if (transform.position.x <= Player.transform.position.x)
+                transform.rotation = Quaternion.Euler(0, 0, 0);
+            else if (transform.position.x > Player.transform.position.x)
+                transform.rotation = Quaternion.Euler(0, 180, 0);
+        }
+        if (Player.GetComponent<PlayerController>().alive == false &&
+            Player.GetComponent<PlayerController>().in_pit == false &&
+            name == "Elliot")
+        {
+            transform.position = Vector2.MoveTowards(transform.position,
+                Player.transform.position, speed * Time.deltaTime);
+            if (transform.position.x <= Player.transform.position.x)
+                transform.rotation = Quaternion.Euler(0, 0, 0);
+            else if (transform.position.x > Player.transform.position.x)
+                transform.rotation = Quaternion.Euler(0, 180, 0);
+        }
     }
 }
