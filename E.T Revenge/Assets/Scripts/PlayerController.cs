@@ -15,6 +15,7 @@ public class PlayerController : MonoBehaviour
     {
         in_pit = false;
         rb2d = GetComponent<Rigidbody2D>();
+        StartCoroutine(UpdateHealth());
      //   rb2d.gravityScale = 10;
     }
 
@@ -23,6 +24,7 @@ public class PlayerController : MonoBehaviour
     public GameObject DownTrigger;
     public GameObject LeftTrigger;
     public GameObject RightTrigger;
+    public GameObject Corpse;
     private GameObject Blood;
     private Animator animator;
     public Collider2D PitSave;
@@ -32,6 +34,10 @@ public class PlayerController : MonoBehaviour
     public bool walk;
     public bool alive;
     public bool scan;
+    public int health;
+    public bool elioth_alive;
+    public string tag_save;
+    public int parts;
 
 
     void Awake()
@@ -42,10 +48,13 @@ public class PlayerController : MonoBehaviour
         DownTrigger = GameObject.FindWithTag("DownTrigger");
         LeftTrigger = GameObject.FindWithTag("LeftTrigger");
         RightTrigger = GameObject.FindWithTag("RightTrigger");
+        Corpse = GameObject.Find("Corpse");
         animator = GetComponent<Animator>();
         alive = true;
         scan = false;
         kill = false;
+        health = 60;
+        elioth_alive = true;
         if (Camera == null)
             Debug.Log("Problem");
     }
@@ -88,21 +97,61 @@ public class PlayerController : MonoBehaviour
             LeftTrigger.transform.position = new Vector3(LeftTrigger.transform.position.x + 21.143f, LeftTrigger.transform.position.y, LeftTrigger.transform.position.z);
             RightTrigger.transform.position = new Vector3(RightTrigger.transform.position.x + 21.143f, RightTrigger.transform.position.y, RightTrigger.transform.position.z);
         }
-        else if (other.gameObject.tag == "PitNormal" && in_pit == false)
+        else if (other.gameObject.tag == "PitNormal"
+            && in_pit == false)
         {
             in_pit = true;
             end_fall = false;
             savePos = transform.position;
             saveCam = Camera.transform.position;
-            transform.position = new Vector2(47.63f, 13.61f);
-            Camera.transform.position = new Vector3(47.69f, 10.13f, Camera.transform.position.z);
+            if (other.gameObject.tag == "PitNormal")
+            {
+                transform.position = new Vector2(81f, 5.76f);
+                Camera.transform.position = new Vector3(80f, 3.70f, Camera.transform.position.z);
+            }
             rb2d.gravityScale = 2;
             GetComponent<Collider2D>().isTrigger = false;
-//            other.GetComponent<PolygonCollider2D>().enabled = false;
+            PitSave = other;
+        }
+        else if (other.gameObject.tag == "PitPickup1")
+        {
+            in_pit = true;
+            end_fall = false;
+            savePos = transform.position;
+            saveCam = Camera.transform.position;
+            transform.position = new Vector2(81f, -13.0f);
+            Camera.transform.position = new Vector3(80f, -14.8f, Camera.transform.position.z);
+            rb2d.gravityScale = 2;
+            GetComponent<Collider2D>().isTrigger = false;
+            PitSave = other;
+        }
+        else if (other.gameObject.tag == "PitPickup2")
+        {
+            in_pit = true;
+            end_fall = false;
+            savePos = transform.position;
+            saveCam = Camera.transform.position;
+            transform.position = new Vector2(81f, -33.0f);
+            Camera.transform.position = new Vector3(80f, -34.8f, Camera.transform.position.z);
+            rb2d.gravityScale = 2;
+            GetComponent<Collider2D>().isTrigger = false;
+            PitSave = other;
+        }
+        else if (other.gameObject.tag == "PitPickup3")
+        {
+            in_pit = true;
+            end_fall = false;
+            savePos = transform.position;
+            saveCam = Camera.transform.position;
+            transform.position = new Vector2(81f, -53.0f);
+            Camera.transform.position = new Vector3(80f, -54.8f, Camera.transform.position.z);
+            rb2d.gravityScale = 2;
+            GetComponent<Collider2D>().isTrigger = false;
             PitSave = other;
         }
         else if (other.gameObject.tag == "PitUp")
         {
+            tag_save = PitSave.gameObject.tag;
             PitSave.gameObject.tag = "PitCurrent";
             Camera.transform.position = saveCam;
             transform.position = savePos;
@@ -114,6 +163,26 @@ public class PlayerController : MonoBehaviour
             Blood.transform.position = other.gameObject.transform.position;
             Destroy(other.gameObject);
             kill = true;
+            health += 50;
+            if (alive == false)
+            {
+                Corpse.transform.position = new Vector2(-100, -100);
+                GetComponent<SpriteRenderer>().enabled = true;
+                alive = true;
+            }
+            elioth_alive = false;
+        }
+        else if (other.gameObject.tag == "Pickup")
+        {
+            parts++;
+            Debug.Log("pickup");
+            Destroy(other.gameObject);
+        }
+        else if (other.gameObject.tag == "Cop")
+        {
+            health = 1;
+            Debug.Log("death");
+            Destroy(other.gameObject);
         }
     }
 
@@ -130,7 +199,7 @@ public class PlayerController : MonoBehaviour
         if (other.gameObject.tag == "PitCurrent")
         {
             in_pit = false;
-            PitSave.gameObject.tag = "PitNormal";
+            PitSave.gameObject.tag = tag_save;
  //           other.GetComponent<PolygonCollider2D>().enabled = true;
             Debug.Log("Exit");
         }
@@ -144,6 +213,29 @@ public class PlayerController : MonoBehaviour
             rb2d.gravityScale = 0;
             animator.SetTrigger("playerIdle");
         }
+        if (other.gameObject.tag == "PickUp")
+        {
+            parts++;
+            Destroy(other.gameObject);
+        }
+    }
+
+    IEnumerator UpdateHealth()
+    {
+        while (true)
+        {
+            health--;
+            if (health <= 0 && alive == true)
+            {
+                alive = false;
+                GetComponent<SpriteRenderer>().enabled = false;
+                Corpse.transform.position = transform.position;
+//                animator.SetTrigger("playerDeath");
+                yield return new WaitForSeconds(3);
+                Application.Quit();
+            }
+            yield return new WaitForSeconds(1);
+        }
     }
 
     void Update()
@@ -152,6 +244,10 @@ public class PlayerController : MonoBehaviour
         foreach (SpriteRenderer renderer in renderers)
         {
             renderer.sortingOrder = (int)(renderer.transform.position.y * -100);
+        }
+        if (parts == 3)
+        {
+            Application.Quit();
         }
         if (kill == true)
         {
@@ -195,14 +291,14 @@ public class PlayerController : MonoBehaviour
                 }
                 Vector2 movement = new Vector2(moveHorizontal * speed, moveVertical * speed);
                 rb2d.MovePosition(rb2d.position + movement);
-                if (transform.position.x > 70)
-                    transform.position = new Vector2(40, transform.position.y);
+                if (transform.position.x > 50)
+                    transform.position = new Vector2(50, transform.position.y);
                 else if (transform.position.x < -9f)
                     transform.position = new Vector2(-9f, transform.position.y);
                 if (transform.position.y < -4f)
                     transform.position = new Vector2(transform.position.x, -4);
-                else if (transform.position.y > 22f)
-                    transform.position = new Vector2(transform.position.x, 14f);
+                else if (transform.position.y > 23f)
+                    transform.position = new Vector2(transform.position.x, 23f);
             }
             else if (in_pit == true && end_fall == true)
             {
