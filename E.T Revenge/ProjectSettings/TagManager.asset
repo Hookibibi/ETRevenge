@@ -20,6 +20,7 @@ TagManager:
   - PitPickup3
   - Water
   - Cop
+  - Doctor
   layers:
   - Default
   - TransparentFX
@@ -57,6 +58,9 @@ TagManager:
   - name: Background
     uniqueID: 1403351367
     locked: 0
+  - name: Effects
+    uniqueID: 2647191489
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
@@ -65,4 +69,7 @@ TagManager:
     locked: 0
   - name: Player
     uniqueID: 1405484983
+    locked: 0
+  - name: UX
+    uniqueID: 1730993069
     locked: 0

@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
@@ -25,23 +26,42 @@ public class PlayerController : MonoBehaviour
     public GameObject LeftTrigger;
     public GameObject RightTrigger;
     public GameObject Corpse;
+    public GameObject Rocket;
+    public AudioClip eatSound;
+    public AudioClip fallSound;
+    public AudioClip deathSound;
+    public AudioClip build1Sound;
+    public AudioClip build2Sound;
+    public AudioClip build3Sound;
+    public AudioClip gameoverSound;
+    public AudioClip captureSound;
+    public AudioClip footstepSound;
+    public AudioClip footstep2Sound;
+    public AudioClip winSound;
+    public AudioClip rocketSound;
+    private AudioSource source;
     private GameObject Blood;
     private Animator animator;
     public Collider2D PitSave;
     public Vector2 savePos;
     public Vector3 saveCam;
+    private AudioSource Music;
+    public Text healthText;
     public bool kill;
     public bool walk;
     public bool alive;
     public bool scan;
     public int health;
+    public int step;
     public bool elioth_alive;
     public string tag_save;
     public int parts;
-
+    public float vol = 0.8f;
 
     void Awake()
     {
+        Music = GameObject.Find("Music").GetComponent<AudioSource>();
+        source = GetComponent<AudioSource>();
         Blood = GameObject.Find("Blood");
         Camera = GameObject.FindWithTag("MainCamera");
         UpTrigger = GameObject.FindWithTag("UpTrigger");
@@ -49,11 +69,16 @@ public class PlayerController : MonoBehaviour
         LeftTrigger = GameObject.FindWithTag("LeftTrigger");
         RightTrigger = GameObject.FindWithTag("RightTrigger");
         Corpse = GameObject.Find("Corpse");
+        Rocket = GameObject.Find("Rocket");
+        Rocket.GetComponent<SpriteRenderer>().enabled = false;
         animator = GetComponent<Animator>();
         alive = true;
         scan = false;
         kill = false;
+        parts = 0;
         health = 60;
+        healthText.text = "Health : " + health.ToString();
+        step = 0;
         elioth_alive = true;
         if (Camera == null)
             Debug.Log("Problem");
@@ -102,6 +127,7 @@ public class PlayerController : MonoBehaviour
         {
             in_pit = true;
             end_fall = false;
+            source.PlayOneShot(fallSound, vol);
             savePos = transform.position;
             saveCam = Camera.transform.position;
             if (other.gameObject.tag == "PitNormal")
@@ -117,6 +143,7 @@ public class PlayerController : MonoBehaviour
         {
             in_pit = true;
             end_fall = false;
+            source.PlayOneShot(fallSound, vol);
             savePos = transform.position;
             saveCam = Camera.transform.position;
             transform.position = new Vector2(81f, -13.0f);
@@ -129,6 +156,7 @@ public class PlayerController : MonoBehaviour
         {
             in_pit = true;
             end_fall = false;
+            source.PlayOneShot(fallSound, vol);
             savePos = transform.position;
             saveCam = Camera.transform.position;
             transform.position = new Vector2(81f, -33.0f);
@@ -142,6 +170,7 @@ public class PlayerController : MonoBehaviour
             in_pit = true;
             end_fall = false;
             savePos = transform.position;
+            source.PlayOneShot(fallSound, vol);
             saveCam = Camera.transform.position;
             transform.position = new Vector2(81f, -53.0f);
             Camera.transform.position = new Vector3(80f, -54.8f, Camera.transform.position.z);
@@ -162,10 +191,12 @@ public class PlayerController : MonoBehaviour
         {
             Blood.transform.position = other.gameObject.transform.position;
             Destroy(other.gameObject);
+            source.PlayOneShot(eatSound, vol);
             kill = true;
             health += 50;
             if (alive == false)
             {
+                Music.UnPause();
                 Corpse.transform.position = new Vector2(-100, -100);
                 GetComponent<SpriteRenderer>().enabled = true;
                 alive = true;
@@ -175,15 +206,64 @@ public class PlayerController : MonoBehaviour
         else if (other.gameObject.tag == "Pickup")
         {
             parts++;
-            Debug.Log("pickup");
+            Debug.Log(parts.ToString());
+            if (parts == 1)
+                source.PlayOneShot(build1Sound, vol);
+            else if (parts == 2)
+                source.PlayOneShot(build2Sound, vol);
+            else if (parts == 3)
+                source.PlayOneShot(build3Sound, vol);
+            if (parts == 3)
+            {
+                Rocket.GetComponent<SpriteRenderer>().enabled = true;
+                alive = false;
+                transform.position = new Vector2(100, 100);
+                Camera.transform.position = new Vector3(0f, 10f, Camera.transform.position.z);
+                StartCoroutine(RocketGo());
+            }
             Destroy(other.gameObject);
         }
         else if (other.gameObject.tag == "Cop")
         {
             health = 1;
-            Debug.Log("death");
             Destroy(other.gameObject);
         }
+        else if (other.gameObject.tag == "Doctor")
+        {
+            transform.position = new Vector3(20, 0, transform.position.z);
+            Camera.transform.position = new Vector3(Camera.transform.position.x, Camera.transform.position.y - 10, Camera.transform.position.z);
+            UpTrigger.transform.position = new Vector3(UpTrigger.transform.position.x, UpTrigger.transform.position.y - 10, UpTrigger.transform.position.z);
+            DownTrigger.transform.position = new Vector3(DownTrigger.transform.position.x, DownTrigger.transform.position.y - 10, DownTrigger.transform.position.z);
+            LeftTrigger.transform.position = new Vector3(LeftTrigger.transform.position.x, LeftTrigger.transform.position.y - 10, LeftTrigger.transform.position.z);
+            RightTrigger.transform.position = new Vector3(RightTrigger.transform.position.x, RightTrigger.transform.position.y - 10, RightTrigger.transform.position.z);
+            alive = false;
+            source.PlayOneShot(captureSound, vol);
+            StartCoroutine(InJail());
+        }
+        else if (other.gameObject.tag == "Water")
+        {
+            health = 1;
+        }
+    }
+
+    IEnumerator InJail()
+    {
+        yield return new WaitForSeconds(3);
+        alive = true;
+    }
+
+    IEnumerator RocketGo()
+    {
+        Music.Stop();
+        source.PlayOneShot(rocketSound, vol);
+        while (Rocket.transform.position.y < 20)
+        {
+            Rocket.transform.position = new Vector2(Rocket.transform.position.x, Rocket.transform.position.y + 0.02f);
+            yield return new WaitForSeconds(0.0002f);
+        }
+        source.PlayOneShot(winSound, vol);
+        yield return new WaitForSeconds(3);
+        Application.Quit();
     }
 
     IEnumerator CreateBlood()
@@ -224,15 +304,27 @@ public class PlayerController : MonoBehaviour
     {
         while (true)
         {
-            health--;
+            if (alive == true)
+                health--;
+            healthText.text = "Health : " + health.ToString();
             if (health <= 0 && alive == true)
             {
+                Music.Pause();
+                if (elioth_alive == true)
+                    source.PlayOneShot(deathSound, vol);
+                else
+                {
+                    alive = false;
+                    GetComponent<SpriteRenderer>().enabled = false;
+                    Corpse.transform.position = transform.position;
+                    source.PlayOneShot(gameoverSound, vol);
+                    yield return new WaitForSeconds(3);
+                    Application.Quit();
+                }
                 alive = false;
                 GetComponent<SpriteRenderer>().enabled = false;
                 Corpse.transform.position = transform.position;
-//                animator.SetTrigger("playerDeath");
-                yield return new WaitForSeconds(3);
-                Application.Quit();
+                //                animator.SetTrigger("playerDeath");
             }
             yield return new WaitForSeconds(1);
         }
@@ -244,10 +336,6 @@ public class PlayerController : MonoBehaviour
         foreach (SpriteRenderer renderer in renderers)
         {
             renderer.sortingOrder = (int)(renderer.transform.position.y * -100);
-        }
-        if (parts == 3)
-        {
-            Application.Quit();
         }
         if (kill == true)
         {
@@ -267,6 +355,19 @@ public class PlayerController : MonoBehaviour
                     transform.rotation = Quaternion.Euler(0, 0, 0);
                 if (!(moveHorizontal == 0f && moveVertical == 0f))
                 {
+                    if (source.isPlaying == false)
+                    {
+                        if (step == 0)
+                        {
+                            source.PlayOneShot(footstepSound, vol);
+                            step = 1;
+                        }
+                        else
+                        {
+                            source.PlayOneShot(footstep2Sound, vol);
+                            step = 0;
+                        }
+                    }
                     scan = false;
                     walk = true;
                     animator.SetTrigger("playerWalk");

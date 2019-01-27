@@ -5,11 +5,13 @@ using UnityEngine;
 public class ElliotRoaming : MonoBehaviour
 {
     private GameObject Player;
+    private GameObject Music;
     public float speed;
     // Start is called before the first frame update
     void Start()
     {
         Player = GameObject.Find("Player");
+        Music = GameObject.Find("Music");
     }
 
     // Update is called once per frame
@@ -30,7 +32,7 @@ public class ElliotRoaming : MonoBehaviour
             name == "Elliot")
         {
             transform.position = Vector2.MoveTowards(transform.position,
-                Player.transform.position, speed * Time.deltaTime);
+                Player.transform.position, 3 * Time.deltaTime);
             if (transform.position.x <= Player.transform.position.x)
                 transform.rotation = Quaternion.Euler(0, 0, 0);
             else if (transform.position.x > Player.transform.position.x)
