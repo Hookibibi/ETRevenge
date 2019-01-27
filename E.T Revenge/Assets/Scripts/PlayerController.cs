@@ -22,8 +22,14 @@ public class PlayerController : MonoBehaviour
     public GameObject DownTrigger;
     public GameObject LeftTrigger;
     public GameObject RightTrigger;
+    private Animator animator;
+    public Collider2D PitSave;
     public Vector2 savePos;
     public Vector3 saveCam;
+    public bool walk;
+    public bool alive;
+    public bool scan;
+
 
     void Awake()
     {
@@ -32,6 +38,9 @@ public class PlayerController : MonoBehaviour
         DownTrigger = GameObject.FindWithTag("DownTrigger");
         LeftTrigger = GameObject.FindWithTag("LeftTrigger");
         RightTrigger = GameObject.FindWithTag("RightTrigger");
+        animator = GetComponent<Animator>();
+        alive = true;
+        scan = false;
         if (Camera == null)
             Debug.Log("Problem");
     }
@@ -40,7 +49,6 @@ public class PlayerController : MonoBehaviour
     {
         if (other.gameObject.tag == "UpTrigger")
         {
-            Debug.Log("Up");
             transform.position = new Vector3(transform.position.x, transform.position.y + 2, transform.position.z);
             Camera.transform.position = new Vector3(Camera.transform.position.x, Camera.transform.position.y + 10, Camera.transform.position.z);
             UpTrigger.transform.position = new Vector3(UpTrigger.transform.position.x, UpTrigger.transform.position.y + 10, UpTrigger.transform.position.z);
@@ -50,7 +58,6 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.gameObject.tag == "DownTrigger")
         {
-            Debug.Log("Down");
             transform.position = new Vector3(transform.position.x, transform.position.y - 2, transform.position.z);
             Camera.transform.position = new Vector3(Camera.transform.position.x, Camera.transform.position.y - 10, Camera.transform.position.z);
             UpTrigger.transform.position = new Vector3(UpTrigger.transform.position.x, UpTrigger.transform.position.y - 10, UpTrigger.transform.position.z);
@@ -60,7 +67,6 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.gameObject.tag == "LeftTrigger")
         {
-            Debug.Log("Down");
             transform.position = new Vector3(transform.position.x - 2, transform.position.y, transform.position.z);
             Camera.transform.position = new Vector3(Camera.transform.position.x - 21.143f, Camera.transform.position.y, Camera.transform.position.z);
             UpTrigger.transform.position = new Vector3(UpTrigger.transform.position.x - 21.143f, UpTrigger.transform.position.y, UpTrigger.transform.position.z);
@@ -70,7 +76,6 @@ public class PlayerController : MonoBehaviour
         }
         else if (other.gameObject.tag == "RightTrigger")
         {
-            Debug.Log("Down");
             transform.position = new Vector3(transform.position.x + 2, transform.position.y, transform.position.z);
             Camera.transform.position = new Vector3(Camera.transform.position.x + 21.143f, Camera.transform.position.y, Camera.transform.position.z);
             UpTrigger.transform.position = new Vector3(UpTrigger.transform.position.x + 21.143f, UpTrigger.transform.position.y, UpTrigger.transform.position.z);
@@ -78,7 +83,7 @@ public class PlayerController : MonoBehaviour
             LeftTrigger.transform.position = new Vector3(LeftTrigger.transform.position.x + 21.143f, LeftTrigger.transform.position.y, LeftTrigger.transform.position.z);
             RightTrigger.transform.position = new Vector3(RightTrigger.transform.position.x + 21.143f, RightTrigger.transform.position.y, RightTrigger.transform.position.z);
         }
-        else if (other.gameObject.tag == "PitNormal")
+        else if (other.gameObject.tag == "PitNormal" && in_pit == false)
         {
             in_pit = true;
             end_fall = false;
@@ -88,6 +93,27 @@ public class PlayerController : MonoBehaviour
             Camera.transform.position = new Vector3(47.69f, 10.13f, Camera.transform.position.z);
             rb2d.gravityScale = 2;
             GetComponent<Collider2D>().isTrigger = false;
+//            other.GetComponent<PolygonCollider2D>().enabled = false;
+            PitSave = other;
+        }
+        else if (other.gameObject.tag == "PitUp")
+        {
+            PitSave.gameObject.tag = "PitCurrent";
+            Camera.transform.position = saveCam;
+            transform.position = savePos;
+            rb2d.gravityScale = 0;
+            GetComponent<Collider2D>().isTrigger = true;
+        }
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.gameObject.tag == "PitCurrent")
+        {
+            in_pit = false;
+            PitSave.gameObject.tag = "PitNormal";
+ //           other.GetComponent<PolygonCollider2D>().enabled = true;
+            Debug.Log("Exit");
         }
     }
 
@@ -96,41 +122,92 @@ public class PlayerController : MonoBehaviour
         if (other.gameObject.tag == "Sol")
         {
             end_fall = true;
+            rb2d.gravityScale = 0;
+            animator.SetTrigger("playerIdle");
         }
     }
 
-    void FixedUpdate()
+    void Update()
     {
-        if (in_pit == false)
+        SpriteRenderer[] renderers = FindObjectsOfType<SpriteRenderer>();
+        foreach (SpriteRenderer renderer in renderers)
         {
-            float moveHorizontal = Input.GetAxis("Horizontal");
-            float moveVertical = Input.GetAxis("Vertical");
-
-            if (moveHorizontal > 0)
-                transform.rotation = Quaternion.Euler(0, 180, 0);
-            else if (moveHorizontal < 0)
-                transform.rotation = Quaternion.Euler(0, 0, 0);
-            Vector2 movement = new Vector2(moveHorizontal * speed, moveVertical * speed);
-            rb2d.MovePosition(rb2d.position + movement);
-            if (transform.position.x > 40)
-                transform.position = new Vector2(40, transform.position.y);
-            else if (transform.position.x < -9f)
-                transform.position = new Vector2(-9f, transform.position.y);
-            if (transform.position.y < -4f)
-                transform.position = new Vector2(transform.position.x, -4);
-            else if (transform.position.y > 14f)
-                transform.position = new Vector2(transform.position.x, 14f);
+            renderer.sortingOrder = (int)(renderer.transform.position.y * -100);
         }
-        else if (in_pit == true && end_fall == true)
+        if (alive == true)
         {
-            float moveHorizontal = Input.GetAxis("Horizontal");
+            if (in_pit == false)
+            {
+                float moveHorizontal = Input.GetAxis("Horizontal");
+                float moveVertical = Input.GetAxis("Vertical");
 
-            if (moveHorizontal > 0)
-                transform.rotation = Quaternion.Euler(0, 180, 0);
-            else if (moveHorizontal < 0)
-                transform.rotation = Quaternion.Euler(0, 0, 0);
-            Vector2 movement = new Vector2(moveHorizontal * speed, 0f);
-            rb2d.MovePosition(rb2d.position + movement);
+                if (moveHorizontal > 0)
+                    transform.rotation = Quaternion.Euler(0, 180, 0);
+                else if (moveHorizontal < 0)
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                if (!(moveHorizontal == 0f && moveVertical == 0f))
+                {
+                    scan = false;
+                    walk = true;
+                    animator.SetTrigger("playerWalk");
+                }
+                else if (Input.GetKeyDown("space"))
+                {
+                    Debug.Log("scan");
+                    walk = false;
+                    scan = true;
+                    animator.SetTrigger("playerScan");
+                }
+                else if (!(Input.GetKeyDown("space")) && scan == false)
+                {
+                    scan = false;
+                    animator.SetTrigger("playerIdle");
+                }
+                else
+                {
+                    scan = false;
+                    walk = false;
+                    animator.SetTrigger("playerIdle");
+                }
+                Vector2 movement = new Vector2(moveHorizontal * speed, moveVertical * speed);
+                rb2d.MovePosition(rb2d.position + movement);
+                if (transform.position.x > 70)
+                    transform.position = new Vector2(40, transform.position.y);
+                else if (transform.position.x < -9f)
+                    transform.position = new Vector2(-9f, transform.position.y);
+                if (transform.position.y < -4f)
+                    transform.position = new Vector2(transform.position.x, -4);
+                else if (transform.position.y > 22f)
+                    transform.position = new Vector2(transform.position.x, 14f);
+            }
+            else if (in_pit == true && end_fall == true)
+            {
+                float moveHorizontal = Input.GetAxis("Horizontal");
+                float moveVertical = Input.GetAxis("Vertical");
+
+                if (moveVertical > 0.0f)
+                {
+                    if (scan == false)
+                        animator.SetTrigger("playerScan");
+                    scan = true;
+                    Debug.Log("scan");
+                }
+                else if (moveHorizontal != 0.0f)
+                {
+                    scan = false;
+                    animator.SetTrigger("playerWalk");
+                }
+                if (moveHorizontal > 0)
+                    transform.rotation = Quaternion.Euler(0, 180, 0);
+                else if (moveHorizontal < 0)
+                    transform.rotation = Quaternion.Euler(0, 0, 0);
+                Vector2 movement;
+                if (moveVertical == 0)
+                    movement = new Vector2(moveHorizontal * speed, -1 * speed);
+                else
+                    movement = new Vector2(moveHorizontal * speed, moveVertical * speed);
+                rb2d.MovePosition(rb2d.position + movement);
+            }
         }
     }
 }

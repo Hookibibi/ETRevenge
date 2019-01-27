@@ -10,6 +10,10 @@ TagManager:
   - RightTrigger
   - PitNormal
   - Sol
+  - PitUp
+  - PitCurrent
+  - Trees
+  - Pickup
   layers:
   - Default
   - TransparentFX
@@ -49,6 +53,9 @@ TagManager:
     locked: 0
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Trees
+    uniqueID: 3665235675
     locked: 0
   - name: Player
     uniqueID: 1405484983
